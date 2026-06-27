@@ -146,6 +146,41 @@ export default function App() {
     }
   };
 
+  const [isFetchingLaNacion, setIsFetchingLaNacion] = useState<boolean>(false);
+
+  const fetchLaNacionNews = async () => {
+    setIsFetchingLaNacion(true);
+    try {
+      const res = await fetch(
+        'https://api.rss2json.com/v1/api.json?rss_url=https://www.lanacion.com.ar/arc/outboundfeeds/rss/'
+      );
+      const data = await res.json();
+      if (data.status === 'ok' && data.items?.length > 0) {
+        const articles: NewsArticle[] = data.items.map((item: any) => ({
+          id: item.guid || item.link,
+          title: item.title,
+          excerpt: item.description?.replace(/<[^>]*>/g, '').slice(0, 220) + '...',
+          content: (item.content || item.description || '').replace(/<[^>]*>/g, ''),
+          category: 'Política' as const,
+          date: new Date(item.pubDate).toISOString().split('T')[0],
+          author: item.author || 'La Nación',
+          readTime: '3 min',
+          likes: 0,
+          link: item.link
+        }));
+        setNews(articles);
+        setSelectedNewsId(articles[0].id);
+        showToast('Noticias de La Nación cargadas. 📰');
+      } else {
+        showToast('No se encontraron noticias en este momento.');
+      }
+    } catch {
+      showToast('Error al cargar noticias. Revisá tu conexión.');
+    } finally {
+      setIsFetchingLaNacion(false);
+    }
+  };
+
   // Fiscal form modal state
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isAfiliadoFormOpen, setIsAfiliadoFormOpen] = useState<boolean>(false);
@@ -448,6 +483,24 @@ export default function App() {
                 : <Newspaper className="w-5 h-5 text-purple-300" />
               }
               <span>{isFetchingNews ? 'Cargando...' : 'Noticias de nuestro partido'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveCategory('Todas');
+                setIsSavedOnly(false);
+                setIsMobileMenuOpen(false);
+                fetchLaNacionNews();
+              }}
+              className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
+                'text-slate-300 hover:text-white hover:bg-white/5 border border-transparent'
+              }`}
+            >
+              {isFetchingLaNacion
+                ? <span className="w-5 h-5 rounded-full border-2 border-purple-300 border-t-transparent animate-spin shrink-0" />
+                : <Newspaper className="w-5 h-5 text-purple-300" />
+              }
+              <span>{isFetchingLaNacion ? 'Cargando...' : 'Noticias de hoy'}</span>
             </button>
 
           </nav>
