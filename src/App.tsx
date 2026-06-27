@@ -41,6 +41,7 @@ interface NewsArticle {
   author: string;
   readTime: string;
   likes: number;
+  link?: string;
 }
 
 interface Poll {
@@ -108,6 +109,42 @@ export default function App() {
 
   // Mobile menu toggle state
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
+  // News fetch state
+  const [isFetchingNews, setIsFetchingNews] = useState<boolean>(false);
+
+  const fetchPartyNews = async () => {
+    setIsFetchingNews(true);
+    try {
+      const res = await fetch(
+        'https://api.rss2json.com/v1/api.json?rss_url=https://lalibertadavanza.com.ar/feed/'
+      );
+      const data = await res.json();
+      if (data.status === 'ok' && data.items?.length > 0) {
+        const articles: NewsArticle[] = data.items.map((item: any) => ({
+          id: item.guid || item.link,
+          title: item.title,
+          excerpt: item.description?.replace(/<[^>]*>/g, '').slice(0, 220) + '...',
+          content: (item.content || item.description || '').replace(/<[^>]*>/g, ''),
+          category: 'Política' as const,
+          date: new Date(item.pubDate).toISOString().split('T')[0],
+          author: item.author || 'La Libertad Avanza',
+          readTime: '3 min',
+          likes: 0,
+          link: item.link
+        }));
+        setNews(articles);
+        setSelectedNewsId(articles[0].id);
+        showToast('Noticias cargadas correctamente. 🦁');
+      } else {
+        showToast('No se encontraron noticias en este momento.');
+      }
+    } catch {
+      showToast('Error al cargar noticias. Revisá tu conexión.');
+    } finally {
+      setIsFetchingNews(false);
+    }
+  };
 
   // Fiscal form modal state
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
@@ -397,9 +434,8 @@ export default function App() {
               onClick={() => {
                 setActiveCategory('Todas');
                 setIsSavedOnly(false);
-                const first = news[0];
-                if (first) setSelectedNewsId(first.id);
                 setIsMobileMenuOpen(false);
+                fetchPartyNews();
               }}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
                 activeCategory === 'Todas' && !isSavedOnly
@@ -407,32 +443,13 @@ export default function App() {
                   : 'text-slate-300 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
-              <Newspaper className="w-5 h-5 text-purple-300" />
-              <span>Noticias de nuestro partido</span>
+              {isFetchingNews
+                ? <span className="w-5 h-5 rounded-full border-2 border-purple-300 border-t-transparent animate-spin shrink-0" />
+                : <Newspaper className="w-5 h-5 text-purple-300" />
+              }
+              <span>{isFetchingNews ? 'Cargando...' : 'Noticias de nuestro partido'}</span>
             </button>
 
-            <button
-              onClick={() => {
-                setIsSavedOnly(true);
-                setIsMobileMenuOpen(false);
-                if (savedArticleIds.length > 0) {
-                  setSelectedNewsId(savedArticleIds[0]);
-                }
-              }}
-              className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
-                isSavedOnly
-                  ? 'bg-white/10 text-white font-bold border border-white/15 shadow-inner'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5 border border-transparent'
-              }`}
-            >
-              <Bookmark className="w-5 h-5 text-purple-300" />
-              <div className="flex-1 flex items-center justify-between">
-                <span>Guardadas</span>
-                <span className="text-[10px] bg-purple-950 border border-purple-800/40 px-2 py-0.5 rounded-full text-purple-300">
-                  {savedArticleIds.length}
-                </span>
-              </div>
-            </button>
           </nav>
 
         </aside>
@@ -576,17 +593,29 @@ export default function App() {
                       ))}
                     </div>
 
-                    {/* Like counter support inside article footer */}
-                    <div className="border-t border-purple-950/30 pt-4 flex items-center justify-between text-xs">
+                    {/* Article footer */}
+                    <div className="border-t border-purple-950/30 pt-4 flex items-center justify-between text-xs gap-3 flex-wrap">
                       <span className="text-slate-400 font-mono">Tiempo estimado de lectura: {activeArticle.readTime}</span>
-                      
-                      <button
-                        onClick={() => handleLikeArticle(activeArticle.id)}
-                        className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-purple-950/40 border border-purple-500/20 text-xs font-bold text-slate-200 hover:bg-purple-900/30 transition-all"
-                      >
-                        <ThumbsUp className="w-3.5 h-3.5 text-purple-400" />
-                        <span>Apoyar ({activeArticle.likes})</span>
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {activeArticle.link && (
+                          <a
+                            href={activeArticle.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-purple-600/20 border border-purple-500/30 text-xs font-bold text-purple-300 hover:bg-purple-600/30 transition-all"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                            <span>Leer nota completa</span>
+                          </a>
+                        )}
+                        <button
+                          onClick={() => handleLikeArticle(activeArticle.id)}
+                          className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-purple-950/40 border border-purple-500/20 text-xs font-bold text-slate-200 hover:bg-purple-900/30 transition-all"
+                        >
+                          <ThumbsUp className="w-3.5 h-3.5 text-purple-400" />
+                          <span>Apoyar ({activeArticle.likes})</span>
+                        </button>
+                      </div>
                     </div>
 
                   </article>
@@ -677,34 +706,6 @@ export default function App() {
             {/* Right 1 Column inside central panel: Side Feeds & Interactive Poll */}
             <div className="xl:col-span-1 space-y-8">
               
-              {/* OTHER STORIES CAROUSEL / NAV LIST */}
-              <div className="bg-[#130830] border border-purple-950/50 rounded-3xl p-6 space-y-4">
-                <h3 className="text-xs font-black tracking-wider text-white uppercase border-b border-purple-950/20 pb-2">
-                  Artículos del Feed ({filteredNews.length})
-                </h3>
-                
-                <div className="space-y-3">
-                  {filteredNews.map((art) => (
-                    <button
-                      key={art.id}
-                      onClick={() => setSelectedNewsId(art.id)}
-                      className={`w-full text-left p-3.5 rounded-2xl border text-xs flex flex-col gap-1.5 transition-all ${
-                        selectedNewsId === art.id
-                          ? 'bg-purple-950/30 border-purple-500/40 text-white font-bold'
-                          : 'bg-[#180938] border-transparent text-slate-400 hover:text-slate-200 hover:bg-purple-950/10'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-[9px] font-mono text-purple-400 tracking-wider font-bold uppercase">
-                          {art.category}
-                        </span>
-                        <span className="text-[9px] font-mono text-slate-500">{art.date}</span>
-                      </div>
-                      <span className="font-semibold line-clamp-2 leading-snug">{art.title}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* WEEKLY POLL CARD */}
               <div className="bg-[#130830] border border-purple-950/50 rounded-3xl p-6 space-y-4">
@@ -771,37 +772,6 @@ export default function App() {
                 )}
               </div>
 
-              {/* FRASES RECIENTES DE LA LIBERTAD */}
-              <div className="bg-[#130830] border border-purple-950/50 rounded-3xl p-6 space-y-4">
-                <div className="flex items-center gap-2 border-b border-purple-950/20 pb-3">
-                  <div className="p-1.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <h3 className="text-xs font-black tracking-wider text-white uppercase">Bases Morales</h3>
-                </div>
-
-                <div className="space-y-4">
-                  {[
-                    {
-                      quote: '"La justicia social es injusta porque se financia con el robo coactivo de impuestos."',
-                      author: 'Javier Milei'
-                    },
-                    {
-                      quote: '"El superávit fiscal es innegociable. No gastar más de lo que ingresa es el principio elemental del crecimiento duradero."',
-                      author: 'Manuel Adorni'
-                    }
-                  ].map((item, idx) => (
-                    <div key={idx} className="border-l-2 border-purple-500 pl-3 space-y-1">
-                      <p className="text-[11px] text-slate-300 italic leading-relaxed">
-                        {item.quote}
-                      </p>
-                      <p className="text-[9px] font-black tracking-wider text-purple-400 uppercase font-display">
-                        — {item.author}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
 
             </div>
 
