@@ -42,6 +42,7 @@ interface NewsArticle {
   readTime: string;
   likes: number;
   link?: string;
+  image?: string;
 }
 
 interface Poll {
@@ -112,12 +113,22 @@ export default function App() {
 
   // News fetch state
   const [isFetchingNews, setIsFetchingNews] = useState<boolean>(false);
+  const [newsSource, setNewsSource] = useState<'party' | 'lanacion' | null>(null);
+
+  const extractImage = (item: any): string | undefined => {
+    if (item.thumbnail && item.thumbnail !== 'self') return item.thumbnail;
+    if (item.enclosure?.link) return item.enclosure.link;
+    const imgMatch = (item.content || item.description || '').match(/<img[^>]+src=["']([^"']+)["']/i);
+    return imgMatch ? imgMatch[1] : undefined;
+  };
 
   const fetchPartyNews = async () => {
     setIsFetchingNews(true);
+    setNewsSource('party');
+    setNews([]);
     try {
       const res = await fetch(
-        'https://api.rss2json.com/v1/api.json?rss_url=https://lalibertadavanza.com.ar/feed/'
+        'https://api.rss2json.com/v1/api.json?rss_url=https://lalibertadavanza.com.ar/feed/&count=50'
       );
       const data = await res.json();
       if (data.status === 'ok' && data.items?.length > 0) {
@@ -131,13 +142,12 @@ export default function App() {
           author: item.author || 'La Libertad Avanza',
           readTime: '3 min',
           likes: 0,
-          link: item.link
+          link: item.link,
+          image: extractImage(item)
         }));
         setNews(articles);
         setSelectedNewsId(articles[0].id);
         showToast('Noticias cargadas correctamente. 🦁');
-      } else {
-        showToast('No se encontraron noticias en este momento.');
       }
     } catch {
       showToast('Error al cargar noticias. Revisá tu conexión.');
@@ -150,9 +160,11 @@ export default function App() {
 
   const fetchLaNacionNews = async () => {
     setIsFetchingLaNacion(true);
+    setNewsSource('lanacion');
+    setNews([]);
     try {
       const res = await fetch(
-        'https://api.rss2json.com/v1/api.json?rss_url=https://www.lanacion.com.ar/arc/outboundfeeds/rss/'
+        'https://api.rss2json.com/v1/api.json?rss_url=https://www.lanacion.com.ar/arc/outboundfeeds/rss/&count=50'
       );
       const data = await res.json();
       if (data.status === 'ok' && data.items?.length > 0) {
@@ -166,7 +178,8 @@ export default function App() {
           author: item.author || 'La Nación',
           readTime: '3 min',
           likes: 0,
-          link: item.link
+          link: item.link,
+          image: extractImage(item)
         }));
         setNews(articles);
         setSelectedNewsId(articles[0].id);
@@ -518,6 +531,7 @@ export default function App() {
             <div className="xl:col-span-2 space-y-8">
               
               {filteredNews.length === 0 ? (
+                newsSource === null ? (
                 <div className="space-y-6">
                   {/* Card Fiscales */}
                   <div className="bg-[#1A0B3C] border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)] rounded-3xl p-10 flex flex-col items-center text-center space-y-5">
@@ -567,6 +581,7 @@ export default function App() {
                     </button>
                   </div>
                 </div>
+                ) : null
               ) : (
                 <>
                   {/* Article Container with very rounded corners and purple neon borders */}
@@ -594,11 +609,11 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Article Image (High-quality modern city layout with sutil touches of LLA branding) */}
+                    {/* Article Image */}
                     <div className="relative rounded-2xl overflow-hidden aspect-video border border-purple-950/40">
-                      <img 
-                        src="https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&q=80&w=1000" 
-                        alt="Plottier y el Futuro Libre" 
+                      <img
+                        src={activeArticle.image || "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&q=80&w=1000"}
+                        alt={activeArticle.title}
                         className="w-full h-full object-cover filter brightness-90 contrast-[1.05]"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
@@ -758,7 +773,36 @@ export default function App() {
 
             {/* Right 1 Column inside central panel: Side Feeds & Interactive Poll */}
             <div className="xl:col-span-1 space-y-8">
-              
+
+              {/* Article List (shown when news is loaded) */}
+              {filteredNews.length > 0 && (
+                <div className="bg-[#130830] border border-purple-950/50 rounded-3xl p-4 space-y-1">
+                  <div className="flex items-center gap-2 border-b border-purple-950/20 pb-3 mb-3">
+                    <div className="p-1.5 rounded bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                      <Newspaper className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-xs font-black tracking-wider text-white uppercase">
+                      {newsSource === 'lanacion' ? 'La Nación' : 'Noticias del partido'}
+                    </h3>
+                  </div>
+                  <div className="space-y-1 max-h-[420px] overflow-y-auto pr-1">
+                    {filteredNews.map((article) => (
+                      <button
+                        key={article.id}
+                        onClick={() => setSelectedNewsId(article.id)}
+                        className={`w-full text-left p-3 rounded-xl border text-xs transition-all ${
+                          selectedNewsId === article.id
+                            ? 'border-purple-400 bg-purple-600/10 text-white'
+                            : 'border-purple-950/40 bg-[#180938] hover:border-purple-500/30 hover:bg-purple-950/20 text-slate-300'
+                        }`}
+                      >
+                        <span className="font-bold line-clamp-2 leading-snug">{article.title}</span>
+                        <span className="block text-[10px] text-slate-500 font-mono mt-1">{article.date}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* WEEKLY POLL CARD */}
               <div className="bg-[#130830] border border-purple-950/50 rounded-3xl p-6 space-y-4">
