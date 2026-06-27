@@ -420,7 +420,7 @@ export default function App() {
     <div className="min-h-screen bg-gradient-to-br from-[#2C0F62] via-[#5030A0] to-[#7A58BE] text-slate-100 flex flex-col font-sans antialiased selection:bg-purple-600/30 selection:text-purple-200">
 
       {/* LOGO BANNER FULL WIDTH */}
-      <div className="w-full relative overflow-hidden flex justify-center items-center">
+      <div className="w-full relative overflow-hidden flex justify-center items-center h-36 sm:h-48 md:h-60">
         <img
           src="/Plottier.png"
           alt="Plottier"
@@ -430,14 +430,14 @@ export default function App() {
         <img
           src="/Libertad.png"
           alt="Logo La Libertad Avanza"
-          className="relative z-10 w-1/2 h-auto object-contain translate-y-16"
+          className="relative z-10 w-3/4 sm:w-1/2 md:w-2/5 h-auto object-contain"
           style={{ filter: 'invert(1) drop-shadow(0 2px 12px rgba(0,0,0,0.5))' }}
         />
       </div>
       
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed bottom-16 right-6 z-50 bg-[#1E0A48] border border-purple-500/40 text-slate-100 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-in text-sm backdrop-blur-md">
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:w-auto z-50 bg-[#1E0A48] border border-purple-500/40 text-slate-100 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-in text-sm backdrop-blur-md">
           <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
           <span className="font-semibold">{notification}</span>
         </div>
@@ -472,8 +472,8 @@ export default function App() {
         )}
 
         {/* 1. LEFT SIDEBAR (BARRA DE NAVEGACIÓN) */}
-        <aside 
-          className={`fixed lg:sticky top-0 left-0 bottom-0 z-50 lg:z-10 w-80 bg-[#1E0A48] flex flex-col justify-between transform transition-transform duration-300 ease-in-out border-r border-purple-950/20 ${
+        <aside
+          className={`fixed lg:sticky top-0 left-0 bottom-0 h-screen lg:h-auto lg:self-start z-50 lg:z-10 w-72 sm:w-80 bg-[#1E0A48] flex flex-col justify-between transform transition-transform duration-300 ease-in-out border-r border-purple-950/20 ${
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           }`}
         >
@@ -525,14 +525,14 @@ export default function App() {
           
 
           {/* Central Grid Content */}
-          <div className="p-6 lg:p-8 flex-1 grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
-            
+          <div className="p-3 sm:p-5 lg:p-8 flex-1 grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-8 items-start">
+
             {/* Left 2 Columns inside central panel: Main Active Article */}
-            <div className="xl:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-5 lg:space-y-8">
 
               {/* GALLERY VIEW */}
               {activeView === 'galeria' ? (
-                <div className="bg-[#130830] border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.12)] rounded-[2.2rem] overflow-hidden p-6 sm:p-8 space-y-6">
+                <div className="bg-[#130830] border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.12)] rounded-2xl sm:rounded-[2.2rem] overflow-hidden p-4 sm:p-6 lg:p-8 space-y-5 lg:space-y-6">
                   <div className="space-y-1">
                     <span className="text-[11px] font-black tracking-widest text-purple-400 uppercase">
                       GALERÍA DE IMÁGENES
@@ -580,7 +580,7 @@ export default function App() {
                 newsSource === null ? (
                 <div className="space-y-6">
                   {/* Card Fiscales */}
-                  <div className="bg-[#1A0B3C] border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)] rounded-3xl p-10 flex flex-col items-center text-center space-y-5">
+                  <div className="bg-[#1A0B3C] border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)] rounded-2xl sm:rounded-3xl p-6 sm:p-10 flex flex-col items-center text-center space-y-4 sm:space-y-5">
                     <div className="p-4 rounded-full bg-purple-600/20 border border-purple-500/30">
                       <Vote className="w-10 h-10 text-purple-300" />
                     </div>
@@ -604,7 +604,7 @@ export default function App() {
                   </div>
 
                   {/* Card Afiliación */}
-                  <div className="bg-[#1A0B3C] border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)] rounded-3xl p-10 flex flex-col items-center text-center space-y-5">
+                  <div className="bg-[#1A0B3C] border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)] rounded-2xl sm:rounded-3xl p-6 sm:p-10 flex flex-col items-center text-center space-y-4 sm:space-y-5">
                     <div className="p-4 rounded-full bg-purple-600/20 border border-purple-500/30">
                       <Heart className="w-10 h-10 text-purple-300" />
                     </div>
@@ -630,15 +630,34 @@ export default function App() {
                 ) : null
               ) : (
                 <>
+                  {/* Mobile article selector - horizontal scroll, hidden on lg+ */}
+                  {filteredNews.length > 1 && (
+                    <div className="lg:hidden flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x">
+                      {filteredNews.map((article) => (
+                        <button
+                          key={article.id}
+                          onClick={() => setSelectedNewsId(article.id)}
+                          className={`shrink-0 snap-start max-w-[200px] text-left px-3 py-2 rounded-xl border text-xs transition-all ${
+                            (selectedNewsId || filteredNews[0]?.id) === article.id
+                              ? 'border-purple-400 bg-purple-600/20 text-white'
+                              : 'border-purple-950/40 bg-[#180938] text-slate-300'
+                          }`}
+                        >
+                          <span className="line-clamp-2 leading-snug font-semibold">{article.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Article Container with very rounded corners and purple neon borders */}
-                  <article className="bg-[#130830] border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.12)] rounded-[2.2rem] overflow-hidden p-6 sm:p-8 space-y-6">
+                  <article className="bg-[#130830] border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.12)] rounded-2xl sm:rounded-[2.2rem] overflow-hidden p-4 sm:p-6 lg:p-8 space-y-5 lg:space-y-6">
                     
                     <div className="space-y-2">
                       <span className="text-[11px] font-black tracking-widest text-purple-400 uppercase">
                         ÚLTIMAS NOTICIAS DE LA LIBERTAD AVANZA
                       </span>
                       
-                      <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
                         {activeArticle.title}
                       </h2>
                       
@@ -735,7 +754,7 @@ export default function App() {
                   </article>
 
                   {/* COMMENTS SECTION */}
-                  <div className="bg-[#130830] border border-purple-950/40 rounded-[2.2rem] p-6 sm:p-8 space-y-6">
+                  <div className="bg-[#130830] border border-purple-950/40 rounded-2xl sm:rounded-[2.2rem] p-4 sm:p-6 lg:p-8 space-y-5 lg:space-y-6">
                     <div className="border-b border-purple-950/20 pb-4">
                       <h3 className="text-lg font-bold tracking-tight text-white font-sans flex items-center gap-2">
                         <MessageCircle className="w-5 h-5 text-purple-400" />
@@ -818,7 +837,7 @@ export default function App() {
             </div>
 
             {/* Right 1 Column inside central panel: Side Feeds & Interactive Poll */}
-            <div className="xl:col-span-1 space-y-8">
+            <div className="lg:col-span-1 space-y-5 lg:space-y-8">
 
               {/* Article List (shown when news is loaded) */}
               {filteredNews.length > 0 && (
@@ -986,8 +1005,8 @@ export default function App() {
 
       {/* MODAL FORMULARIO FISCAL */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#1A0B3C] border border-purple-500/30 rounded-3xl shadow-2xl p-8 space-y-6">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-[#1A0B3C] border border-purple-500/30 rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-8 space-y-5 sm:space-y-6">
 
             {/* Cerrar */}
             <button
@@ -1137,8 +1156,8 @@ export default function App() {
 
       {/* MODAL FORMULARIO AFILIACIÓN */}
       {isAfiliadoFormOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#1A0B3C] border border-purple-500/30 rounded-3xl shadow-2xl p-8 space-y-6">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm">
+          <div className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto bg-[#1A0B3C] border border-purple-500/30 rounded-t-3xl sm:rounded-3xl shadow-2xl p-5 sm:p-8 space-y-5 sm:space-y-6">
 
             <button
               onClick={() => setIsAfiliadoFormOpen(false)}
