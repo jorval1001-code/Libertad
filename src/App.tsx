@@ -18,7 +18,8 @@ import {
   BarChart2,
   Lock,
   Heart,
-  MapPin
+  MapPin,
+  Images
 } from 'lucide-react';
 
 // Interfaces
@@ -114,6 +115,7 @@ export default function App() {
   // News fetch state
   const [isFetchingNews, setIsFetchingNews] = useState<boolean>(false);
   const [newsSource, setNewsSource] = useState<'party' | 'lanacion' | null>(null);
+  const [activeView, setActiveView] = useState<'news' | 'galeria'>('news');
 
   const extractImage = (item: any): string | undefined => {
     if (item.thumbnail && item.thumbnail !== 'self') return item.thumbnail;
@@ -483,10 +485,11 @@ export default function App() {
                 setActiveCategory('Todas');
                 setIsSavedOnly(false);
                 setIsMobileMenuOpen(false);
+                setActiveView('news');
                 fetchPartyNews();
               }}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
-                activeCategory === 'Todas' && !isSavedOnly
+                activeView === 'news' && newsSource === 'party'
                   ? 'bg-white/10 text-white font-bold border border-white/15 shadow-inner'
                   : 'text-slate-300 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
@@ -500,20 +503,17 @@ export default function App() {
 
             <button
               onClick={() => {
-                setActiveCategory('Todas');
-                setIsSavedOnly(false);
+                setActiveView('galeria');
                 setIsMobileMenuOpen(false);
-                fetchLaNacionNews();
               }}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
-                'text-slate-300 hover:text-white hover:bg-white/5 border border-transparent'
+                activeView === 'galeria'
+                  ? 'bg-purple-600/20 border border-purple-500/40 text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5 border border-transparent'
               }`}
             >
-              {isFetchingLaNacion
-                ? <span className="w-5 h-5 rounded-full border-2 border-purple-300 border-t-transparent animate-spin shrink-0" />
-                : <Newspaper className="w-5 h-5 text-purple-300" />
-              }
-              <span>{isFetchingLaNacion ? 'Cargando...' : 'Noticias de hoy'}</span>
+              <Images className="w-5 h-5 text-purple-300" />
+              <span>Galería</span>
             </button>
 
           </nav>
@@ -529,8 +529,54 @@ export default function App() {
             
             {/* Left 2 Columns inside central panel: Main Active Article */}
             <div className="xl:col-span-2 space-y-8">
-              
-              {filteredNews.length === 0 ? (
+
+              {/* GALLERY VIEW */}
+              {activeView === 'galeria' ? (
+                <div className="bg-[#130830] border border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.12)] rounded-[2.2rem] overflow-hidden p-6 sm:p-8 space-y-6">
+                  <div className="space-y-1">
+                    <span className="text-[11px] font-black tracking-widest text-purple-400 uppercase">
+                      GALERÍA DE IMÁGENES
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white leading-tight">
+                      La Libertad Avanza Plottier
+                    </h2>
+                    <p className="text-slate-400 text-sm">
+                      Momentos, eventos y actividades de nuestro espacio político en Plottier y la región.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {[
+                      { src: '/Plottier.png', label: 'Plottier' },
+                      { src: '/Libertad.png', label: 'La Libertad Avanza', invert: true },
+                    ].map((img, i) => (
+                      <div
+                        key={i}
+                        className="relative aspect-square rounded-2xl overflow-hidden border border-purple-950/50 bg-[#1A0B3C] group cursor-pointer"
+                      >
+                        <img
+                          src={img.src}
+                          alt={img.label}
+                          className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${img.invert ? 'invert mix-blend-screen' : ''}`}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="absolute bottom-2 left-3 text-xs font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                          {img.label}
+                        </span>
+                      </div>
+                    ))}
+                    {/* Placeholder slots */}
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <div
+                        key={`placeholder-${i}`}
+                        className="aspect-square rounded-2xl border border-dashed border-purple-950/40 bg-[#1A0B3C]/50 flex flex-col items-center justify-center gap-2"
+                      >
+                        <Images className="w-6 h-6 text-purple-800" />
+                        <span className="text-[10px] text-purple-800 font-mono">Próximamente</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : filteredNews.length === 0 ? (
                 newsSource === null ? (
                 <div className="space-y-6">
                   {/* Card Fiscales */}
