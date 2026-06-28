@@ -2,5 +2,5 @@
   "name": "La Libertad Avanza - Noticias",
   "description": "Plataforma interactiva de noticias, novedades y debates en tiempo real de La Libertad Avanza, adaptada a móviles con diseño premium.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }
